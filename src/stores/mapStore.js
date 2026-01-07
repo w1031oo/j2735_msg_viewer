@@ -661,19 +661,30 @@ export const useMapStore = defineStore("map", () => {
   const cleanupLayers = () => {
     if (!state.map) return;
 
-    // 1. 먼저 모든 레이어를 제거
+    // 인터랙션 제거
+    ["lane-hover", "point-hover"].forEach((id) => {
+      try {
+        state.map.removeInteraction(id);
+      } catch (e) {
+        // 존재하지 않으면 무시
+      }
+    });
+
+    // 이벤트 제거
+    state.map.off("mouseleave", state.layers.laneLines);
+    state.map.off("mouseleave", state.layers.lanePoints);
+
+    // 레이어 제거
     Object.values(state.layers).forEach((layerId) => {
-      // 레이블 레이어도 확인하여 제거
       if (state.map.getLayer(layerId + "-label")) {
         state.map.removeLayer(layerId + "-label");
       }
-
       if (state.map.getLayer(layerId)) {
         state.map.removeLayer(layerId);
       }
     });
 
-    // 2. 그 다음 모든 소스를 제거
+    // 소스 제거
     Object.values(state.layers).forEach((layerId) => {
       if (state.map.getSource(layerId)) {
         state.map.removeSource(layerId);

@@ -46,7 +46,7 @@
           <v-list color="transparent">
             <v-list-item prepend-icon="mdi-delete">
               <div class="pa-2">
-                <v-btn block> Clear </v-btn>
+                <v-btn block @click="mapStore.cleanupLayers()"> Clear </v-btn>
               </div>
             </v-list-item>
           </v-list>
