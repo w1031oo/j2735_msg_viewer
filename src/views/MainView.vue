@@ -4,7 +4,11 @@
       v-model="mapStore.state.isLoading"
       class="align-center justify-center text-h4"
     >
-      Loading...
+      <v-progress-circular
+        :size="64"
+        :width="6"
+        indeterminate
+      ></v-progress-circular>
     </v-overlay>
 
     <!-- Error Message -->
@@ -15,7 +19,12 @@
     <v-layout>
       <v-navigation-drawer expand-on-hover permanent rail>
         <v-list>
-          <v-list-item :prepend-avatar="logo">
+          <v-list-item>
+            <template #prepend>
+              <v-avatar>
+                <v-icon>mdi-map-marker</v-icon>
+              </v-avatar>
+            </template>
             <img :src="logo" alt="Logo" />
           </v-list-item>
         </v-list>
@@ -27,7 +36,7 @@
             <template v-slot:activator="{ props }">
               <v-list-item
                 v-bind="props"
-                prepend-icon="mdi-map-marker"
+                prepend-icon="mdi-map"
                 title="MAP"
               ></v-list-item>
             </template>
@@ -50,14 +59,6 @@
               </div>
             </v-list-item>
           </v-list>
-          <!-- <div class="pa-2">
-            <v-btn
-              append-icon="mdi-account-circle"
-              prepend-icon="mdi-check-circle"
-            >
-              Clear
-            </v-btn>
-          </div> -->
         </template>
       </v-navigation-drawer>
 
@@ -94,12 +95,11 @@ import { nextTick, onMounted, onUnmounted, reactive, ref } from "vue";
 import logo from "../assets/logo.png";
 // Store
 import { useMapStore } from "../stores/mapStore";
-import { fa } from "vuetify/locale";
 const mapStore = useMapStore();
 
 const modules = import.meta.glob("../assets/map_ksa/*.json");
 
-const open = ref([]); // Map이 처음부터 열림
+const open = ref([]);
 
 const state = reactive({
   mapList: [],
@@ -110,14 +110,12 @@ const state = reactive({
 
 const handleSelect = (path) => {
   loadIntersectionData(path);
-  console.log("선택됨:", path);
 };
 
 // 교차로 데이터 로드 함수
 const loadIntersectionData = async (path) => {
   try {
     const module = await modules[path]();
-    console.log("JSON 데이터:", module.default);
 
     await mapStore.loadIntersectionData(module.default);
   } catch (error) {

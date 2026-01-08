@@ -92,20 +92,6 @@ export const useMapStore = defineStore("map", () => {
     return { x: 0, y: 0 };
   };
 
-  // 노드 좌표 계산 함수
-  const calculateNodeCoordinates = (refPoint, deltaX, deltaY) => {
-    // 위도 1도 = 약 111,320m = 11,132,000cm
-    const latPerCm = 1 / 11132000; // ≈ 0.00000008983
-
-    // 경도는 위도에 따라 다름 (한국 위도 37도 기준)
-    const lngPerCm = 1 / (11132000 * Math.cos((refPoint.lat * Math.PI) / 180));
-
-    return {
-      lat: refPoint.lat + (deltaY / 100) * latPerCm, // cm를 m로 변환
-      lng: refPoint.lng + (deltaX / 100) * lngPerCm,
-    };
-  };
-
   // 차선 색상 할당 함수
   const getLaneColor = (isIngress, isEgress) => {
     if (isIngress) {
@@ -231,7 +217,7 @@ export const useMapStore = defineStore("map", () => {
       layout: {
         "text-field": ["get", "name"],
         "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-        "text-size": 16,
+        "text-size": 15,
         "text-offset": [0, 1.5],
         "text-anchor": "center",
       },
@@ -287,8 +273,6 @@ export const useMapStore = defineStore("map", () => {
         ) {
           coordinates = processComputedNodes(lane, laneSet, refPoint);
         }
-
-        console.log("lane", lane);
 
         // 좌표가 충분하면 GeoJSON Feature 추가
         if (coordinates.length > 1) {
@@ -351,7 +335,7 @@ export const useMapStore = defineStore("map", () => {
     if (value & 0x20) types.push("화물차");
 
     const type = types.length > 0 ? types.join(", ") : "일반차선";
-    console.log("차선 타입:", type);
+
     return type;
   };
 
@@ -506,17 +490,21 @@ export const useMapStore = defineStore("map", () => {
       type: "symbol",
       source: state.layers.laneLines,
       layout: {
-        "text-field": ["get", "name"],
+        "text-field": ["get", "id"],
         "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
         "text-size": 14,
-        // 텍스트 위치 변경 - 선의 중간에 표시
-        "text-anchor": "center",
-        "symbol-placement": "line-center", // 선의 중간에 레이블 배치
+        "text-anchor": "center", // 선의 중간에 표시
+        "symbol-placement": "point", // 시작점 배치
         "text-allow-overlap": false,
       },
       paint: {
-        "text-color": "#FFFFFF",
-        "text-halo-color": "#000000",
+        "text-color": "#FFFFFF", // 기본 색상
+        "text-halo-color": [
+          "case",
+          ["boolean", ["feature-state", "hover"], false],
+          "#ff0000", // hover 시 하얀색
+          "#000000", // 기본 색상
+        ],
         "text-halo-width": 2,
       },
     });
@@ -618,43 +606,6 @@ export const useMapStore = defineStore("map", () => {
 
       popup.remove();
     });
-
-    // // 차선 클릭 이벤트
-    // state.map.on("click", state.layers.laneLines, (e) => {
-    //   if (!e.features || !e.features.length) return;
-
-    //   const feature = e.features[0];
-    //   const coordinates = e.lngLat;
-
-    //   bottomSheetState.isOpen = !bottomSheetState.isOpen;
-    //   bottomSheetState.title = feature.properties.description;
-    //   bottomSheetState.text = `좌표: [${coordinates[0].toFixed(
-    //     6
-    //   )}, ${coordinates[1].toFixed(6)}]`;
-
-    //   // new mapboxgl.Popup()
-    //   //   .setLngLat(coordinates)
-    //   //   .setHTML(feature.properties.description)
-    //   //   .addTo(state.map);
-    // });
-
-    // // 포인트 클릭 이벤트
-    // state.map.on("click", state.layers.lanePoints, (e) => {
-    //   if (!e.features || !e.features.length) return;
-    //   const feature = e.features[0];
-    //   new mapboxgl.Popup()
-    //     .setLngLat(e.lngLat)
-    //     .setHTML(feature.properties.description)
-    //     .addTo(state.map);
-    // });
-
-    // // 마우스 커서 변경
-    // state.map.on("mouseenter", state.layers.lanePoints, () => {
-    //   state.map.getCanvas().style.cursor = "pointer";
-    // });
-    // state.map.on("mouseleave", state.layers.lanePoints, () => {
-    //   state.map.getCanvas().style.cursor = "";
-    // });
   };
 
   // 레이어 정리 함수
