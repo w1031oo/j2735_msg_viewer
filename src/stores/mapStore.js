@@ -1,4 +1,4 @@
-import { reactive } from "vue";
+import { reactive, ref } from "vue";
 import { defineStore } from "pinia";
 // mapbox
 import mapboxgl from "mapbox-gl";
@@ -9,6 +9,7 @@ export const useMapStore = defineStore("map", () => {
     map: null,
     isLoading: false,
     mapError: null,
+    fileInfo: null,
     intersectionData: null,
     layers: {
       laneLines: "lane-lines",
@@ -16,12 +17,6 @@ export const useMapStore = defineStore("map", () => {
       lanePoints: "lane-points",
       refPoint: "ref-point",
     },
-  });
-
-  const bottomSheetState = reactive({
-    isOpen: false,
-    title: "",
-    text: "",
   });
 
   // 지도 초기화
@@ -104,7 +99,7 @@ export const useMapStore = defineStore("map", () => {
   };
 
   // JSON 데이터 로드 및 처리
-  const loadIntersectionData = async (jsonData) => {
+  const loadIntersectionData = async (jsonData, fileName) => {
     try {
       state.isLoading = true;
 
@@ -120,7 +115,7 @@ export const useMapStore = defineStore("map", () => {
       state.intersectionData = jsonData;
 
       // 교차로 데이터 표시
-      renderIntersectionData();
+      renderIntersectionData(fileName);
     } catch (error) {
       state.mapError = "Failed to load intersection data: " + error.message;
       console.error("Intersection data error:", error);
@@ -130,7 +125,7 @@ export const useMapStore = defineStore("map", () => {
   };
 
   // 교차로 데이터 표시
-  const renderIntersectionData = () => {
+  const renderIntersectionData = (fileName) => {
     try {
       if (!state.intersectionData || !state.map) return;
 
@@ -150,6 +145,21 @@ export const useMapStore = defineStore("map", () => {
       const rawRefPoint = intersection.refPoint;
       const refPoint = convertCoordinates(rawRefPoint.lat, rawRefPoint.long);
 
+      // 파일 정보 입력
+      state.fileInfo = {
+        fileName: fileName,
+        layerType: mapData.layerType,
+        msgIssueRevision: mapData.msgIssueRevision,
+        timestamp: mapData.timeStamp,
+        id: intersection?.id?.id,
+        region: intersection?.id?.region,
+        laneSetCount: intersection?.laneSet?.length || 0,
+        refPoint: { lat: refPoint.lat, lng: refPoint.lng },
+        revision: intersection?.revision,
+        speedLimits: convertSpeed(intersection?.speedLimits[0]?.speed),
+      };
+      console.log("File Info:", state.fileInfo);
+
       // 지도 중심 설정
       state.map.setCenter([refPoint.lng, refPoint.lat]);
 
@@ -162,6 +172,11 @@ export const useMapStore = defineStore("map", () => {
       state.mapError = "Failed to render intersection data: " + error.message;
       console.error("Render error:", error);
     }
+  };
+
+  const convertSpeed = (speed) => {
+    if (speed == null || speed === 8191) return "N/A";
+    return (speed * 0.02 * 3.6).toFixed(1) + " km/h";
   };
 
   // 기준점 마커 추가 함수 수정
@@ -612,6 +627,8 @@ export const useMapStore = defineStore("map", () => {
   const cleanupLayers = () => {
     if (!state.map) return;
 
+    state.fileInfo = null;
+
     // 인터랙션 제거
     ["lane-hover", "point-hover"].forEach((id) => {
       try {
@@ -692,7 +709,6 @@ export const useMapStore = defineStore("map", () => {
 
   return {
     state,
-    bottomSheetState,
     initMap,
     loadIntersectionData,
     cleanupLayers,

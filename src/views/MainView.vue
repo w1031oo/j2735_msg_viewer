@@ -1,93 +1,116 @@
 <template>
-  <v-card>
-    <v-overlay
-      v-model="mapStore.state.isLoading"
-      class="align-center justify-center text-h4"
-    >
-      <v-progress-circular
-        :size="64"
-        :width="6"
-        indeterminate
-      ></v-progress-circular>
-    </v-overlay>
+  <v-overlay
+    v-model="mapStore.state.isLoading"
+    class="align-center justify-center text-h4"
+  >
+    <v-progress-circular
+      :size="64"
+      :width="6"
+      indeterminate
+    ></v-progress-circular>
+  </v-overlay>
 
-    <!-- Error Message -->
-    <div v-if="mapStore.state.mapError" class="error-message">
-      {{ mapStore.state.mapError }}
-    </div>
+  <!-- Error Message -->
+  <div v-if="mapStore.state.mapError" class="error-message">
+    {{ mapStore.state.mapError }}
+  </div>
 
-    <v-layout>
-      <v-navigation-drawer expand-on-hover permanent rail>
-        <v-list>
-          <v-list-item>
-            <template #prepend>
-              <v-avatar>
-                <v-icon>mdi-map-marker</v-icon>
-              </v-avatar>
-            </template>
-            <img :src="logo" alt="Logo" />
+  <v-layout style="height: 100vh">
+    <v-navigation-drawer expand-on-hover permanent rail>
+      <v-list>
+        <v-list-item>
+          <template #prepend>
+            <v-avatar>
+              <v-icon>mdi-map-marker</v-icon>
+            </v-avatar>
+          </template>
+          <img :src="logo" alt="Logo" />
+        </v-list-item>
+      </v-list>
+
+      <v-divider></v-divider>
+
+      <v-list v-model:opened="open" density="compact">
+        <v-list-group value="Map">
+          <template v-slot:activator="{ props }">
+            <v-list-item
+              v-bind="props"
+              prepend-icon="mdi-map"
+              title="MAP"
+            ></v-list-item>
+          </template>
+          <v-list-item
+            v-for="({ name, path }, i) in state.mapList"
+            :key="i"
+            prepend-icon="mdi-folder"
+            :title="name"
+            :value="path"
+            @click="handleSelect(path)"
+          ></v-list-item>
+        </v-list-group>
+      </v-list>
+
+      <template v-slot:append>
+        <v-list color="transparent">
+          <v-list-item prepend-icon="mdi-delete">
+            <div class="pa-2">
+              <v-btn block @click="mapStore.cleanupLayers()"> Clear </v-btn>
+            </div>
           </v-list-item>
         </v-list>
+      </template>
+    </v-navigation-drawer>
 
-        <v-divider></v-divider>
-
-        <v-list v-model:opened="open" density="compact">
-          <v-list-group value="Map">
-            <template v-slot:activator="{ props }">
-              <v-list-item
-                v-bind="props"
-                prepend-icon="mdi-map"
-                title="MAP"
-              ></v-list-item>
-            </template>
-            <v-list-item
-              v-for="({ name, path }, i) in state.mapList"
-              :key="i"
-              prepend-icon="mdi-folder"
-              :title="name"
-              :value="path"
-              @click="handleSelect(path)"
-            ></v-list-item>
-          </v-list-group>
-        </v-list>
-
-        <template v-slot:append>
-          <v-list color="transparent">
-            <v-list-item prepend-icon="mdi-delete">
-              <div class="pa-2">
-                <v-btn block @click="mapStore.cleanupLayers()"> Clear </v-btn>
-              </div>
-            </v-list-item>
-          </v-list>
-        </template>
-      </v-navigation-drawer>
-
-      <v-main style="height: 100vh">
-        <div id="map"></div>
-      </v-main>
-    </v-layout>
-
-    <v-bottom-sheet v-model="mapStore.bottomSheetState.isOpen" inset>
-      <v-card class="text-center" height="200">
-        <v-card-title>{{ mapStore.bottomSheetState.title }}</v-card-title>
+    <v-main class="map-component">
+      <div id="map" style="width: 100%; height: 100%"></div>
+      <v-card v-if="mapStore.state.fileInfo" class="file-name d-inline-block">
+        <v-card-title>{{ mapStore.state.fileInfo?.fileName }}</v-card-title>
         <v-card-text>
-          <div>{{ mapStore.bottomSheetState.text }}</div>
-
-          <br />
-          <br />
-
-          <v-btn
-            text="Close"
-            variant="text"
-            @click="
-              mapStore.bottomSheetState.isOpen =
-                !mapStore.bottomSheetState.isOpen
-            "
-          ></v-btn>
+          <div class="info-item">
+            <span class="label">region:</span>
+            <span>{{ mapStore.state.fileInfo?.region }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">id:</span>
+            <span>{{ mapStore.state.fileInfo?.id }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">timestamp:</span>
+            <span>{{ mapStore.state.fileInfo?.timestamp }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">speedLimits:</span>
+            <span>{{ mapStore.state.fileInfo?.speedLimits }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">revision:</span>
+            <span>{{ mapStore.state.fileInfo?.revision }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">msgIssueRevision:</span>
+            <span>{{ mapStore.state.fileInfo?.msgIssueRevision }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">layerType:</span>
+            <span>{{ mapStore.state.fileInfo?.layerType }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">laneSetCount:</span>
+            <span>{{ mapStore.state.fileInfo?.laneSetCount }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">lat:</span>
+            <span>{{ mapStore.state.fileInfo?.refPoint?.lat }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">lng:</span>
+            <span>{{ mapStore.state.fileInfo?.refPoint?.lng }}</span>
+          </div>
         </v-card-text>
       </v-card>
-    </v-bottom-sheet>
-  </v-card>
+      <!-- <v-btn class="file-name">test</v-btn> -->
+    </v-main>
+  </v-layout>
 </template>
 
 <script setup>
@@ -99,14 +122,11 @@ const mapStore = useMapStore();
 
 const modules = import.meta.glob("../assets/map_ksa/*.json");
 
-const open = ref([]);
+const open = ref([]); // Map이 처음부터 열림
 
 const state = reactive({
   mapList: [],
 });
-
-// import map57JSON from "@/assets/57.json"; // JSON 파일 경로에 맞게 수정 필요
-// import mapCestR1JSON from "@/assets/map_cest_r1.json"; // JSON 파일 경로에 맞게 수정 필요
 
 const handleSelect = (path) => {
   loadIntersectionData(path);
@@ -117,7 +137,7 @@ const loadIntersectionData = async (path) => {
   try {
     const module = await modules[path]();
 
-    await mapStore.loadIntersectionData(module.default);
+    await mapStore.loadIntersectionData(module.default, path.split("/").pop());
   } catch (error) {
     console.error("Failed to load intersection data:", error);
   }
@@ -167,13 +187,14 @@ onUnmounted(() => {
 } */
 
 #map {
-  /* position: absolute; */
+  position: absolute;
   /* top: 0;
   bottom: 0;
   left: 0;
   right: 0; */
   width: 100%;
   height: 100%;
+  z-index: 0;
 }
 
 .loading-overlay {
@@ -210,98 +231,37 @@ onUnmounted(() => {
   left: 20px;
 }
 
-.control-panel {
-  position: fixed;
-  top: 10px;
+.map-component {
+  position: relative;
+  width: 100%; /* 전체 너비 - Route 패널 너비 */
+  height: 100%;
+  overflow: hidden; /* 중요: 오버플로우 숨김 */
+}
+
+.file-name {
+  position: absolute;
   left: 10px;
-  padding: 10px;
-  z-index: 900;
-}
-
-.control-panel1 {
-  position: fixed;
   top: 10px;
-  left: 260px;
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 10px;
-  border-radius: 5px;
-  z-index: 900;
+  z-index: 1000;
+  width: auto;
+  min-width: 250px;
 }
 
-.control-panel1 button {
-  background-color: #3388ff;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  text-align: center;
-  cursor: pointer;
-  border-radius: 4px;
+.info-item {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
-.control-panel1 button:hover {
-  background-color: #006aff;
+.label {
+  font-weight: bold;
+  min-width: 140px;
 }
 
-.control-panel1 button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
-.control-panel2 {
-  position: fixed;
+/* .file-name {
+  position: absolute;
+  left: 10px;
   top: 10px;
-  left: 350px;
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 10px;
-  border-radius: 5px;
-  z-index: 900;
-}
-
-.control-panel2 button {
-  background-color: #3388ff;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  text-align: center;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-.control-panel2 button:hover {
-  background-color: #006aff;
-}
-
-.control-panel2 button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
-.control-panel3 {
-  position: fixed;
-  top: 10px;
-  left: 510px;
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 10px;
-  border-radius: 5px;
-  z-index: 900;
-}
-
-.control-panel3 button {
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  text-align: center;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-.control-panel3 button:hover {
-  background-color: #45a049;
-}
-
-.control-panel3 button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
+  z-index: 1000;
+} */
 </style>
