@@ -120,7 +120,7 @@ import logo from "../assets/logo.png";
 import { useMapStore } from "../stores/mapStore";
 const mapStore = useMapStore();
 
-const modules = import.meta.glob("../assets/map_ksa/*.json");
+const mapModules = import.meta.glob("../assets/j2735_msg/map/*.json");
 
 const open = ref([]); // Map이 처음부터 열림
 
@@ -135,7 +135,7 @@ const handleSelect = (path) => {
 // 교차로 데이터 로드 함수
 const loadIntersectionData = async (path) => {
   try {
-    const module = await modules[path]();
+    const module = await mapModules[path]();
 
     await mapStore.loadIntersectionData(module.default, path.split("/").pop());
   } catch (error) {
@@ -145,7 +145,7 @@ const loadIntersectionData = async (path) => {
 
 // json 리스트 가져오기
 const getMapList = () => {
-  state.mapList = Object.keys(modules).map((path) => ({
+  state.mapList = Object.keys(mapModules).map((path) => ({
     path: path,
     name: path.split("/").pop(),
   }));

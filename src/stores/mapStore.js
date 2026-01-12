@@ -94,7 +94,7 @@ export const useMapStore = defineStore("map", () => {
     } else if (isEgress) {
       return "#FF5500"; // 진출 차선은 빨간색
     } else {
-      return "#FFCC00"; // 기타 차선은 노란색
+      return "#FFC107"; // 기타 차선은 엠버색
     }
   };
 
@@ -156,9 +156,8 @@ export const useMapStore = defineStore("map", () => {
         laneSetCount: intersection?.laneSet?.length || 0,
         refPoint: { lat: refPoint.lat, lng: refPoint.lng },
         revision: intersection?.revision,
-        speedLimits: convertSpeed(intersection?.speedLimits[0]?.speed),
+        speedLimits: convertSpeed(intersection?.speedLimits?.[0]?.speed),
       };
-      console.log("File Info:", state.fileInfo);
 
       // 지도 중심 설정
       state.map.setCenter([refPoint.lng, refPoint.lat]);
