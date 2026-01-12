@@ -17,6 +17,51 @@
 
   <v-layout style="height: 100vh">
     <v-navigation-drawer expand-on-hover permanent rail>
+      <template v-slot:prepend>
+        <v-list>
+          <v-list-item>
+            <template #prepend>
+              <v-avatar>
+                <v-icon>mdi-map-marker</v-icon>
+              </v-avatar>
+            </template>
+            <img :src="logo" alt="Logo" />
+          </v-list-item>
+        </v-list>
+        <v-divider></v-divider>
+      </template>
+
+      <v-list v-model:opened="open" density="compact">
+        <v-list-group value="Map">
+          <template v-slot:activator="{ props }">
+            <v-list-item
+              v-bind="props"
+              prepend-icon="mdi-map"
+              title="MAP"
+            ></v-list-item>
+          </template>
+          <v-list-item
+            v-for="({ name, path }, i) in state.mapList"
+            :key="i"
+            prepend-icon="mdi-folder"
+            :title="name"
+            :value="path"
+            @click="handleSelect(path)"
+          ></v-list-item>
+        </v-list-group>
+      </v-list>
+
+      <template v-slot:append>
+        <v-list color="transparent">
+          <v-list-item prepend-icon="mdi-delete">
+            <div class="pa-2">
+              <v-btn block @click="mapStore.cleanupLayers()"> Clear </v-btn>
+            </div>
+          </v-list-item>
+        </v-list>
+      </template>
+    </v-navigation-drawer>
+    <!-- <v-navigation-drawer expand-on-hover permanent rail>
       <v-list>
         <v-list-item>
           <template #prepend>
@@ -59,7 +104,7 @@
           </v-list-item>
         </v-list>
       </template>
-    </v-navigation-drawer>
+    </v-navigation-drawer> -->
 
     <v-main class="map-component">
       <div id="map" style="width: 100%; height: 100%"></div>
@@ -258,10 +303,50 @@ onUnmounted(() => {
   min-width: 140px;
 }
 
-/* .file-name {
-  position: absolute;
-  left: 10px;
-  top: 10px;
-  z-index: 1000;
+/* 사이드바 스크롤바 숨기기 */
+.v-navigation-drawer__content::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+}
+
+.v-navigation-drawer__content {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+/* scoped 제거하고 !important 추가 */
+/* .v-navigation-drawer__content::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.v-navigation-drawer__content {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.drawer-header {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
+} */
+
+/* 이전 */
+/* .v-navigation-drawer__content {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+} */
+
+/* 스크롤바 숨기기 */
+/* .v-navigation-drawer__content::-webkit-scrollbar {
+  display: none;
+} */
+
+/* .v-navigation-drawer__content {
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
 } */
 </style>
