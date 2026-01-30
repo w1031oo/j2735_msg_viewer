@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"c:\\\\work\\\\dev\\\\j2735-msg-viewer\\\\nest\\\\python\")"
+    ]
+  }
+}
