@@ -1,6 +1,6 @@
 import { ref } from "vue";
 
-const API_BASE = "http://localhost:3301";
+const PREFIX = import.meta.env.VITE_API_PREFIX;
 
 const asnError = ref(null);
 const asnIsPending = ref(false);
@@ -10,7 +10,7 @@ const decodeUper = async (hexData, fileName) => {
   asnIsPending.value = true;
 
   try {
-    const res = await fetch(`${API_BASE}/asn/decode`, {
+    const res = await fetch(`${PREFIX}/asn/decode`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ hexData, fileName }),

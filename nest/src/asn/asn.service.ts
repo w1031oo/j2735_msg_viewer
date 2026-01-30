@@ -34,9 +34,6 @@ export class AsnService {
     }
 
     // 파이썬이 print(json.dumps(...)) 한 내용을 파싱
-    const result = JSON.parse(stdout);
-    this.logger.log('Decoded UPER result:', result);
-
     return JSON.parse(stdout);
   }
   // async decodeUper(hexData: string): Promise<any> {
