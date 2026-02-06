@@ -84,7 +84,7 @@
                 :key="file.path"
                 prepend-icon="mdi-file"
                 :title="file.name"
-                @click="handleFileSelect(file.path)"
+                @click="handleFileSelect(file.name, file.path)"
               ></v-list-item>
             </v-list-group>
 
@@ -102,8 +102,9 @@
                 :key="file.path"
                 prepend-icon="mdi-file"
                 :title="file.name"
-                @click="handleFileSelect(file.path)"
-              ></v-list-item>
+                @click="handleFileSelect(file.name, file.path)"
+              >
+              </v-list-item>
             </v-list-group>
 
             <!-- UPER 폴더 -->
@@ -120,8 +121,9 @@
                 :key="file.path"
                 prepend-icon="mdi-file"
                 :title="file.name"
-                @click="handleFileSelect(file.path)"
-              ></v-list-item>
+                @click="handleFileSelect(file.name, file.path)"
+              >
+              </v-list-item>
             </v-list-group>
           </v-list-group>
         </v-list>
@@ -276,6 +278,7 @@ import { useMapStore } from "../stores/mapStore";
 const mapStore = useMapStore();
 // composables
 import useAsnApi from "../composables/useAsnApi";
+import { nullColor } from "vuetify/components/VColorPicker/util";
 const { asnIsPending, asnError, decodeUper } = useAsnApi();
 
 // const mapModules = import.meta.glob("../assets/j2735_msg/map/*.json");
@@ -296,9 +299,10 @@ const isShowState = reactive({
   jsonView: true,
 });
 
-const allFiles = import.meta.glob("../assets/map/**/*.{json,uper}", {
+const allFiles = import.meta.glob("/src/assets/map/**/*", {
   eager: true,
-  as: "url",
+  query: "?url",
+  import: "default",
 });
 
 // 파일 목록 가져오기
@@ -307,11 +311,10 @@ const loadFileList = () => {
   const ksa = [];
   const uper = [];
 
-  console.log("All imported files:", allFiles);
-
   for (const path in allFiles) {
     const fileName = path.split("/").pop();
-    const fileInfo = { name: fileName, path: path }; // path가 여기서 중요
+    const actualUrl = allFiles[path];
+    const fileInfo = { name: fileName, path: actualUrl }; // 실제 URL 사용
 
     if (path.includes("/j2735/")) j2735.push(fileInfo);
     else if (path.includes("/ksa/")) ksa.push(fileInfo);
@@ -321,12 +324,6 @@ const loadFileList = () => {
   state.j2735Files = j2735;
   state.ksaFiles = ksa;
   state.uperFiles = uper;
-
-  console.log("Loaded file lists:", {
-    j2735: state.j2735Files,
-    ksa: state.ksaFiles,
-    uper: state.uperFiles,
-  });
 };
 
 const openFilePicker = () => {
@@ -362,7 +359,7 @@ const handleFilePick = async (event) => {
 };
 
 // 사이드바 목록 선택 (assets 내부 파일)
-const handleFileSelect = async (filePath) => {
+const handleFileSelect = async (realFileName, filePath) => {
   const fileName = filePath.split("/").pop();
 
   try {
@@ -371,7 +368,7 @@ const handleFileSelect = async (filePath) => {
 
     if (!response.ok) throw new Error("파일을 찾을 수 없습니다.");
 
-    await processFileData(fileName, response);
+    await processFileData(realFileName, response);
   } catch (error) {
     console.error("파일 처리 실패:", error);
   }
@@ -381,12 +378,13 @@ const handleFileSelect = async (filePath) => {
 const processFileData = async (fileName, source) => {
   const ext = fileName.split(".").pop().toLowerCase();
 
+  let jsonData = null;
+
   if (ext === "json") {
-    const jsonData =
+    jsonData =
       source instanceof Response
         ? await source.json()
         : JSON.parse(await source.text());
-    await mapStore.loadIntersectionData(jsonData, fileName);
   } else if (ext === "uper") {
     const arrayBuffer = await source.arrayBuffer();
     const uint8Array = new Uint8Array(arrayBuffer);
@@ -394,12 +392,13 @@ const processFileData = async (fileName, source) => {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
 
-    const { jsonData, fileName: resFileName } = await decodeUper(
-      hexString,
-      fileName,
-    );
-    await mapStore.loadIntersectionData(jsonData, resFileName);
+    const { jsonData: decodedJsonData, fileName: resFileName } =
+      await decodeUper(hexString, fileName);
+
+    jsonData = decodedJsonData;
   }
+
+  await mapStore.loadIntersectionData(jsonData, fileName);
 };
 
 // json 리스트 가져오기

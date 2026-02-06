@@ -12,8 +12,11 @@ export class AsnController {
 
   @Post('decode')
   async decodeUper(@Body() body: { hexData: string; fileName: string }) {
+    this.logger.log(`Try to decoded data for file ${body.fileName}`);
+
     const result = await this.uperService.decodeUper(body.hexData);
-    this.logger.log(`Decoded data for file ${body.fileName}`);
+
+    this.logger.log(`Successfully decoded data for file ${body.fileName}`);
 
     return { jsonData: result, fileName: body.fileName };
   }

@@ -134,7 +134,6 @@ export const useMapStore = defineStore("map", () => {
 
       // 데이터 저장
       state.intersectionData = jsonData;
-      console.log("Loaded intersection data:", state.intersectionData);
 
       // 교차로 데이터 표시
       renderIntersectionData(fileName);

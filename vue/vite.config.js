@@ -16,4 +16,8 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    // 0으로 설정하면 어떤 크기의 파일도 Base64로 인라인화하지 않고 별도 파일로 뽑습니다.
+    assetsInlineLimit: 0,
+  },
 });
